@@ -13,6 +13,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
   }
 
+  // Verify the caller owns the event
+  const { data: event, error: eventError } = await supabase
+    .from('events')
+    .select('id, title')
+    .eq('id', event_id)
+    .eq('created_by', user.id)
+    .single()
+
+  if (eventError || !event) {
+    return NextResponse.json({ error: 'Event not found or access denied' }, { status: 403 })
+  }
+
   const serviceClient = await createServiceClient()
 
   // For username-based invites, user_id is known immediately
@@ -43,19 +55,13 @@ export async function POST(request: NextRequest) {
   // Send SMS via Twilio
   if (invite_method === 'phone' && contact_value) {
     try {
-      const { data: eventData } = await supabase
-        .from('events')
-        .select('title')
-        .eq('id', event_id)
-        .single()
-
       const twilio = await import('twilio')
       const client = twilio.default(
         process.env.TWILIO_ACCOUNT_SID!,
         process.env.TWILIO_AUTH_TOKEN!
       )
       await client.messages.create({
-        body: `You're invited to "${eventData?.title ?? 'an event'}"! Join here: ${inviteUrl}`,
+        body: `You're invited to "${event.title}"! Join here: ${inviteUrl}`,
         from: process.env.TWILIO_PHONE_NUMBER!,
         to: contact_value,
       })

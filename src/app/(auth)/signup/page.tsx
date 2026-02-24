@@ -25,7 +25,7 @@ export default function SignupPage() {
     setLoading(true)
     setError(null)
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -39,10 +39,20 @@ export default function SignupPage() {
     if (error) {
       setError(error.message)
       setLoading(false)
-    } else {
-      router.push('/dashboard')
-      router.refresh()
+      return
     }
+
+    // Explicitly upsert profile in case the DB trigger is delayed or disabled
+    if (data.user) {
+      await supabase.from('profiles').upsert({
+        id: data.user.id,
+        username,
+        display_name: displayName || username,
+      }, { onConflict: 'id' })
+    }
+
+    router.push('/dashboard')
+    router.refresh()
   }
 
   return (

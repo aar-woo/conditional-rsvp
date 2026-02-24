@@ -82,6 +82,14 @@ export function ClaimInvite({ invite, user }: ClaimInviteProps) {
       setLoading(false)
       return
     }
+
+    // Explicitly upsert profile in case the DB trigger is delayed
+    await supabase.from('profiles').upsert({
+      id: data.user.id,
+      username,
+      display_name: username,
+    }, { onConflict: 'id' })
+
     await claimInviteForUser(data.user.id)
   }
 

@@ -28,7 +28,8 @@ export default function EditEventPage() {
       .eq('id', params.id)
       .single()
       .then(({ data }) => setEvent(data))
-  }, [params.id, supabase])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.id])
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
