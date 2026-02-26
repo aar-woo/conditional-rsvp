@@ -43,9 +43,10 @@ export async function POST(request: NextRequest) {
     .single()
 
   if (inviteError || !invite) {
+    const isDuplicate = inviteError?.code === '23505'
     return NextResponse.json(
-      { error: inviteError?.message ?? 'Failed to create invite' },
-      { status: 500 }
+      { error: isDuplicate ? 'This person has already been invited to this event' : (inviteError?.message ?? 'Failed to create invite') },
+      { status: isDuplicate ? 409 : 500 }
     )
   }
 
