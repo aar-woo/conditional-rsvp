@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { ClaimInvite } from '@/components/ClaimInvite'
 
 interface PageProps {
@@ -8,14 +8,18 @@ interface PageProps {
 
 export default async function InvitePage({ params }: PageProps) {
   const { token } = await params
-  const supabase = await createClient()
 
-  // Look up the invite
-  const { data: invite } = await supabase
+  // Use admin client (no cookie auth) so the lookup always bypasses RLS —
+  // the SSR service client leaks the user's JWT into the Authorization header
+  // when a user is logged in, causing RLS to block null-user_id invites.
+  const admin = createAdminClient()
+  const { data: invite } = await admin
     .from('invites')
     .select('*, events(title, event_date, location)')
     .eq('token', token)
     .single()
+
+  const supabase = await createClient()
 
   if (!invite) {
     return (

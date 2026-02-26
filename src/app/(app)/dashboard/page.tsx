@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { EventCard } from '@/components/EventCard'
@@ -9,6 +9,28 @@ export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
+
+  // Auto-claim any unclaimed email/phone invites that match this user,
+  // so they appear on the dashboard without requiring a link click.
+  const admin = createAdminClient()
+  const contactValues: string[] = []
+  if (user.email) contactValues.push(user.email)
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('phone')
+    .eq('id', user.id)
+    .single()
+  if (profile?.phone) contactValues.push(profile.phone)
+
+  if (contactValues.length > 0) {
+    await admin
+      .from('invites')
+      .update({ user_id: user.id, claimed: true })
+      .in('contact_value', contactValues)
+      .eq('claimed', false)
+      .is('user_id', null)
+  }
 
   const [{ data: hostedEvents }, { data: invitedRaw }] = await Promise.all([
     supabase

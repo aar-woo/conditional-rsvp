@@ -1,4 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 
 const PLACEHOLDER_URL = 'https://placeholder.supabase.co'
@@ -26,6 +27,16 @@ export async function createClient() {
         },
       },
     }
+  )
+}
+
+// Admin client: uses service role key with no user JWT — always bypasses RLS
+// regardless of whether a user is currently logged in.
+export function createAdminClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? PLACEHOLDER_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY ?? PLACEHOLDER_KEY,
+    { auth: { autoRefreshToken: false, persistSession: false } }
   )
 }
 

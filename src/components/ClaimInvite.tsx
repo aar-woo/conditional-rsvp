@@ -37,11 +37,18 @@ export function ClaimInvite({ invite, user }: ClaimInviteProps) {
 
   const event = invite.events
 
-  async function claimInviteForUser(userId: string) {
-    await supabase
-      .from('invites')
-      .update({ user_id: userId, claimed: true })
-      .eq('id', invite.id)
+  async function claimInviteForUser() {
+    const res = await fetch('/api/invite/claim', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ invite_id: invite.id }),
+    })
+    if (!res.ok) {
+      const data = await res.json()
+      setError(data.error ?? 'Failed to join event')
+      setLoading(false)
+      return
+    }
     router.push(`/events/${invite.event_id}`)
     router.refresh()
   }
@@ -49,7 +56,7 @@ export function ClaimInvite({ invite, user }: ClaimInviteProps) {
   async function handleClaim() {
     if (!user) return
     setLoading(true)
-    await claimInviteForUser(user.id)
+    await claimInviteForUser()
   }
 
   async function handleLogin(e: React.FormEvent) {
@@ -63,7 +70,7 @@ export function ClaimInvite({ invite, user }: ClaimInviteProps) {
       setLoading(false)
       return
     }
-    await claimInviteForUser(data.user.id)
+    await claimInviteForUser()
   }
 
   async function handleSignup(e: React.FormEvent) {
@@ -90,7 +97,7 @@ export function ClaimInvite({ invite, user }: ClaimInviteProps) {
       display_name: username,
     }, { onConflict: 'id' })
 
-    await claimInviteForUser(data.user.id)
+    await claimInviteForUser()
   }
 
   return (
