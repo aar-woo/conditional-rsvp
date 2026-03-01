@@ -43,13 +43,13 @@ export function ClaimInvite({ invite, user }: ClaimInviteProps) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ invite_id: invite.id }),
     })
+    const data = await res.json()
     if (!res.ok) {
-      const data = await res.json()
       setError(data.error ?? 'Failed to join event')
       setLoading(false)
       return
     }
-    router.push(`/events/${invite.event_id}`)
+    router.push(`/events/${data.event_id}`)
     router.refresh()
   }
 
@@ -143,9 +143,12 @@ export function ClaimInvite({ invite, user }: ClaimInviteProps) {
           </CardHeader>
           <CardContent>
             {user ? (
-              <Button className="w-full" onClick={handleClaim} disabled={loading}>
-                {loading ? 'Joining…' : 'Join event'}
-              </Button>
+              <>
+                {error && <p className="text-sm text-destructive mb-2">{error}</p>}
+                <Button className="w-full" onClick={handleClaim} disabled={loading}>
+                  {loading ? 'Joining…' : 'Join event'}
+                </Button>
+              </>
             ) : (
               <>
                 <form onSubmit={mode === 'login' ? handleLogin : handleSignup} className="space-y-4">
