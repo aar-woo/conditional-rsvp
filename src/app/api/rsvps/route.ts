@@ -18,7 +18,6 @@ export async function POST(request: NextRequest) {
   let resolved_response: string
   if (response === 'yes') resolved_response = 'yes'
   else if (response === 'no') resolved_response = 'no'
-  else if (response === 'maybe') resolved_response = 'pending'
   else resolved_response = 'pending' // conditional starts as pending
 
   // Upsert the RSVP

@@ -1,5 +1,5 @@
 export type EventStatus = 'active' | 'cancelled'
-export type RsvpResponse = 'yes' | 'no' | 'maybe' | 'conditional'
+export type RsvpResponse = 'yes' | 'no' | 'conditional'
 export type ResolvedResponse = 'yes' | 'no' | 'pending'
 export type ConditionType = 'min_attendees' | 'specific_user'
 export type InviteMethod = 'username' | 'email' | 'phone'

@@ -10,7 +10,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import { ConditionBuilder, type Condition } from '@/components/ConditionBuilder'
-import { Check, X, HelpCircle, GitBranch } from 'lucide-react'
+import { Check, X, GitBranch } from 'lucide-react'
 import type { Rsvp } from '@/types'
 
 interface RsvpModalProps {
@@ -21,17 +21,21 @@ interface RsvpModalProps {
   onSuccess: () => void
 }
 
-type RsvpOption = 'yes' | 'no' | 'maybe' | 'conditional'
+type RsvpOption = 'yes' | 'no' | 'conditional'
 
 const OPTIONS: { value: RsvpOption; label: string; icon: React.ReactNode; description: string }[] = [
   { value: 'yes', label: "I'm in", icon: <Check className="h-4 w-4 text-green-600" />, description: 'Confirmed going' },
   { value: 'no', label: "Can't make it", icon: <X className="h-4 w-4 text-red-500" />, description: 'Not attending' },
-  { value: 'maybe', label: 'Maybe', icon: <HelpCircle className="h-4 w-4 text-amber-500" />, description: 'Tentative' },
   { value: 'conditional', label: 'Conditional', icon: <GitBranch className="h-4 w-4 text-blue-500" />, description: "I'll go if…" },
 ]
 
 export function RsvpModal({ open, onClose, eventId, currentRsvp, onSuccess }: RsvpModalProps) {
-  const [selected, setSelected] = useState<RsvpOption>(currentRsvp?.response as RsvpOption ?? 'yes')
+  const initialResponse = currentRsvp?.response
+  const [selected, setSelected] = useState<RsvpOption>(
+    initialResponse === 'yes' || initialResponse === 'no' || initialResponse === 'conditional'
+      ? initialResponse
+      : 'yes'
+  )
   const [conditions, setConditions] = useState<Condition[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
