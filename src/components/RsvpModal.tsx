@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog'
 import { ConditionBuilder, type Condition } from '@/components/ConditionBuilder'
 import { Check, X, GitBranch } from 'lucide-react'
-import type { Rsvp } from '@/types'
+import type { Rsvp, ConditionVisibility } from '@/types'
 
 interface RsvpModalProps {
   open: boolean
@@ -37,6 +37,9 @@ export function RsvpModal({ open, onClose, eventId, currentRsvp, onSuccess }: Rs
       : 'yes'
   )
   const [conditions, setConditions] = useState<Condition[]>([])
+  const [conditionVisibility, setConditionVisibility] = useState<ConditionVisibility>(
+    currentRsvp?.condition_visibility ?? 'private'
+  )
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -51,7 +54,7 @@ export function RsvpModal({ open, onClose, eventId, currentRsvp, onSuccess }: Rs
     const res = await fetch('/api/rsvps', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ event_id: eventId, response: selected, conditions }),
+      body: JSON.stringify({ event_id: eventId, response: selected, conditions, condition_visibility: conditionVisibility }),
     })
 
     if (!res.ok) {
@@ -67,41 +70,65 @@ export function RsvpModal({ open, onClose, eventId, currentRsvp, onSuccess }: Rs
 
   return (
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
-      <DialogContent className="max-w-sm">
+      <DialogContent className="max-w-sm flex flex-col max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Your RSVP</DialogTitle>
           <DialogDescription>Choose how you want to respond to this event.</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-2">
-          {OPTIONS.map(opt => (
-            <button
-              key={opt.value}
-              onClick={() => setSelected(opt.value)}
-              className={`w-full flex items-center gap-3 p-3 rounded-lg border text-left transition-colors ${
-                selected === opt.value
-                  ? 'border-primary bg-primary/5'
-                  : 'border-border hover:bg-accent'
-              }`}
-            >
-              {opt.icon}
+        <div className="flex-1 overflow-y-auto -mx-6 px-6 space-y-4">
+          <div className="space-y-2">
+            {OPTIONS.map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => setSelected(opt.value)}
+                className={`w-full flex items-center gap-3 p-3 rounded-lg border text-left transition-colors ${
+                  selected === opt.value
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover:bg-accent'
+                }`}
+              >
+                {opt.icon}
+                <div>
+                  <div className="text-sm font-medium">{opt.label}</div>
+                  <div className="text-xs text-muted-foreground">{opt.description}</div>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          {selected === 'conditional' && (
+            <div className="border-t pt-4 space-y-4">
+              <ConditionBuilder conditions={conditions} onChange={setConditions} />
               <div>
-                <div className="text-sm font-medium">{opt.label}</div>
-                <div className="text-xs text-muted-foreground">{opt.description}</div>
+                <p className="text-sm font-medium mb-2">Who can see your conditions?</p>
+                <div className="space-y-1.5">
+                  {([
+                    { value: 'private', label: 'Just me' },
+                    { value: 'host', label: 'Host only' },
+                    { value: 'group', label: 'Everyone' },
+                  ] as { value: ConditionVisibility; label: string }[]).map(opt => (
+                    <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="conditionVisibility"
+                        value={opt.value}
+                        checked={conditionVisibility === opt.value}
+                        onChange={() => setConditionVisibility(opt.value)}
+                        className="accent-primary"
+                      />
+                      <span className="text-sm">{opt.label}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
-            </button>
-          ))}
+            </div>
+          )}
         </div>
 
-        {selected === 'conditional' && (
-          <div className="border-t pt-4">
-            <ConditionBuilder conditions={conditions} onChange={setConditions} />
-          </div>
-        )}
+        {error && <p className="text-sm text-destructive pt-2">{error}</p>}
 
-        {error && <p className="text-sm text-destructive">{error}</p>}
-
-        <div className="flex gap-2 pt-2">
+        <div className="flex gap-2 pt-4 border-t">
           <Button variant="outline" onClick={onClose} className="flex-1">Cancel</Button>
           <Button onClick={handleSubmit} disabled={loading} className="flex-1">
             {loading ? 'Saving…' : 'Save RSVP'}

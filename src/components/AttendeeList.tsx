@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-import { Zap, Clock, X, Check, HelpCircle } from 'lucide-react'
+import { Zap, Clock, X, Check, HelpCircle, Lock } from 'lucide-react'
 import type { Rsvp, RsvpCondition, Profile } from '@/types'
 
 interface AttendeeWithRsvp {
@@ -11,6 +11,7 @@ interface AttendeeWithRsvp {
 
 interface AttendeeListProps {
   attendees: AttendeeWithRsvp[]
+  currentUserId?: string
 }
 
 function RsvpStatusIcon({ resolved }: { resolved: string }) {
@@ -25,7 +26,7 @@ function getInitials(profile: Profile | null): string {
   return name.slice(0, 2).toUpperCase()
 }
 
-export function AttendeeList({ attendees }: AttendeeListProps) {
+export function AttendeeList({ attendees, currentUserId }: AttendeeListProps) {
   if (attendees.length === 0) {
     return <p className="text-sm text-muted-foreground">No attendees yet.</p>
   }
@@ -86,6 +87,15 @@ export function AttendeeList({ attendees }: AttendeeListProps) {
                   ))}
                 </ul>
               )}
+              {/* Hidden conditions indicator */}
+              {rsvp?.response === 'conditional' &&
+                (!rsvp.rsvp_conditions || rsvp.rsvp_conditions.length === 0) &&
+                user_id !== currentUserId && (
+                  <div className="flex items-center gap-1.5 mt-1 text-xs text-muted-foreground">
+                    <Lock className="h-3 w-3" />
+                    <span>Conditions hidden</span>
+                  </div>
+                )}
             </div>
           </li>
         )

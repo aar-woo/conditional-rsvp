@@ -3,6 +3,7 @@ export type RsvpResponse = 'yes' | 'no' | 'conditional'
 export type ResolvedResponse = 'yes' | 'no' | 'pending'
 export type ConditionType = 'min_attendees' | 'specific_user'
 export type InviteMethod = 'username' | 'email' | 'phone'
+export type ConditionVisibility = 'private' | 'host' | 'group'
 
 export interface Profile {
   id: string
@@ -44,6 +45,7 @@ export interface Rsvp {
   user_id: string
   response: RsvpResponse
   resolved_response: ResolvedResponse
+  condition_visibility: ConditionVisibility
   updated_at: string
   profiles?: Profile
   rsvp_conditions?: RsvpCondition[]

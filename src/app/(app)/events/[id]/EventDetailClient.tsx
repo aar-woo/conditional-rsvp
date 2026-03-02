@@ -130,7 +130,7 @@ export function EventDetailClient({
             ))}
           </div>
         ) : (
-          <AttendeeList attendees={attendees} />
+          <AttendeeList attendees={attendees} currentUserId={currentUserId} />
         )}
       </div>
 

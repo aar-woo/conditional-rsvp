@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
-  const { event_id, response, conditions } = body
+  const { event_id, response, conditions, condition_visibility = 'private' } = body
 
   if (!event_id || !response) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
   const { data: rsvp, error: rsvpError } = await supabase
     .from('rsvps')
     .upsert(
-      { event_id, user_id: user.id, response, resolved_response, updated_at: new Date().toISOString() },
+      { event_id, user_id: user.id, response, resolved_response, condition_visibility, updated_at: new Date().toISOString() },
       { onConflict: 'event_id,user_id' }
     )
     .select()
