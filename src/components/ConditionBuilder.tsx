@@ -33,6 +33,10 @@ export function ConditionBuilder({ conditions, onChange }: ConditionBuilderProps
 
     if (condType === 'min_attendees') {
       if (threshold < 1) return
+      if (conditions.some(c => c.condition_type === 'min_attendees')) {
+        setSearchError('You can only add one attendance condition.')
+        return
+      }
       onChange([...conditions, { condition_type: 'min_attendees', threshold }])
     } else {
       if (!username.trim()) return
@@ -44,6 +48,10 @@ export function ConditionBuilder({ conditions, onChange }: ConditionBuilderProps
 
       if (!profile) {
         setSearchError(`User "@${username}" not found`)
+        return
+      }
+      if (conditions.some(c => c.target_user_id === profile.id)) {
+        setSearchError(`@${profile.username} is already in your conditions.`)
         return
       }
       onChange([
@@ -93,7 +101,7 @@ export function ConditionBuilder({ conditions, onChange }: ConditionBuilderProps
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="min_attendees">At least N people are going</SelectItem>
+            <SelectItem value="min_attendees" disabled={conditions.some(c => c.condition_type === 'min_attendees')}>At least N people are going</SelectItem>
             <SelectItem value="specific_user">A specific person is going</SelectItem>
           </SelectContent>
         </Select>
