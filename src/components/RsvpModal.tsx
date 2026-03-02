@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -10,7 +10,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import { ConditionBuilder, type Condition } from '@/components/ConditionBuilder'
-import { Check, X, GitBranch } from 'lucide-react'
+import { Check, X, GitBranch, ChevronDown } from 'lucide-react'
 import type { Rsvp, ConditionVisibility } from '@/types'
 
 interface RsvpModalProps {
@@ -42,6 +42,18 @@ export function RsvpModal({ open, onClose, eventId, currentRsvp, onSuccess }: Rs
   )
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [canScrollDown, setCanScrollDown] = useState(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  // Use rAF so the check runs after the browser has finished layout
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => {
+      const el = scrollRef.current
+      if (!el) return
+      setCanScrollDown(el.scrollHeight - el.scrollTop - el.clientHeight > 4)
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [selected, conditions])
 
   async function handleSubmit() {
     if (selected === 'conditional' && conditions.length === 0) {
@@ -70,65 +82,80 @@ export function RsvpModal({ open, onClose, eventId, currentRsvp, onSuccess }: Rs
 
   return (
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
-      <DialogContent className="max-w-sm flex flex-col max-h-[90vh]">
+      <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle>Your RSVP</DialogTitle>
           <DialogDescription>Choose how you want to respond to this event.</DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto -mx-6 px-6 space-y-4">
-          <div className="space-y-2">
-            {OPTIONS.map(opt => (
-              <button
-                key={opt.value}
-                onClick={() => setSelected(opt.value)}
-                className={`w-full flex items-center gap-3 p-3 rounded-lg border text-left transition-colors ${
-                  selected === opt.value
-                    ? 'border-primary bg-primary/5'
-                    : 'border-border hover:bg-accent'
-                }`}
-              >
-                {opt.icon}
-                <div>
-                  <div className="text-sm font-medium">{opt.label}</div>
-                  <div className="text-xs text-muted-foreground">{opt.description}</div>
-                </div>
-              </button>
-            ))}
-          </div>
+        <div className="relative">
+          <div
+            ref={scrollRef}
+            onScroll={() => {
+              const el = scrollRef.current
+              if (!el) return
+              setCanScrollDown(el.scrollHeight - el.scrollTop - el.clientHeight > 4)
+            }}
+            className="overflow-y-auto max-h-[55vh] space-y-4"
+          >
+            <div className="space-y-2">
+              {OPTIONS.map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => setSelected(opt.value)}
+                  className={`w-full flex items-center gap-3 p-3 rounded-lg border text-left transition-colors ${
+                    selected === opt.value
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border hover:bg-accent'
+                  }`}
+                >
+                  {opt.icon}
+                  <div>
+                    <div className="text-sm font-medium">{opt.label}</div>
+                    <div className="text-xs text-muted-foreground">{opt.description}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
 
-          {selected === 'conditional' && (
-            <div className="border-t pt-4 space-y-4">
-              <ConditionBuilder conditions={conditions} onChange={setConditions} />
-              <div>
-                <p className="text-sm font-medium mb-2">Who can see your conditions?</p>
-                <div className="space-y-1.5">
-                  {([
-                    { value: 'private', label: 'Just me' },
-                    { value: 'host', label: 'Host only' },
-                    { value: 'group', label: 'Everyone' },
-                  ] as { value: ConditionVisibility; label: string }[]).map(opt => (
-                    <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="conditionVisibility"
-                        value={opt.value}
-                        checked={conditionVisibility === opt.value}
-                        onChange={() => setConditionVisibility(opt.value)}
-                        className="accent-primary"
-                      />
-                      <span className="text-sm">{opt.label}</span>
-                    </label>
-                  ))}
+            {selected === 'conditional' && (
+              <div className="border-t pt-4 space-y-4">
+                <ConditionBuilder conditions={conditions} onChange={setConditions} />
+                <div>
+                  <p className="text-sm font-medium mb-2">Who can see your conditions?</p>
+                  <div className="space-y-1.5">
+                    {([
+                      { value: 'private', label: 'Just me' },
+                      { value: 'host', label: 'Host only' },
+                      { value: 'group', label: 'Everyone' },
+                    ] as { value: ConditionVisibility; label: string }[]).map(opt => (
+                      <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="conditionVisibility"
+                          value={opt.value}
+                          checked={conditionVisibility === opt.value}
+                          onChange={() => setConditionVisibility(opt.value)}
+                          className="accent-primary"
+                        />
+                        <span className="text-sm">{opt.label}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
               </div>
+            )}
+          </div>
+          {canScrollDown && (
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center pb-1 pt-8 bg-gradient-to-t from-background to-transparent">
+              <ChevronDown className="h-4 w-4 text-muted-foreground animate-bounce" />
             </div>
           )}
         </div>
 
-        {error && <p className="text-sm text-destructive pt-2">{error}</p>}
+        {error && <p className="text-sm text-destructive">{error}</p>}
 
-        <div className="flex gap-2 pt-4 border-t">
+        <div className="flex gap-2">
           <Button variant="outline" onClick={onClose} className="flex-1">Cancel</Button>
           <Button onClick={handleSubmit} disabled={loading} className="flex-1">
             {loading ? 'Saving…' : 'Save RSVP'}
