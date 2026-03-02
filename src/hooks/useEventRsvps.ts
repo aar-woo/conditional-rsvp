@@ -18,7 +18,7 @@ export function useEventRsvps(eventId: string) {
   const fetchAttendees = useCallback(async () => {
     const { data: invites } = await supabase
       .from('invites')
-      .select('user_id, profiles(*)')
+      .select('user_id, profiles!user_id(*)')
       .eq('event_id', eventId)
       .not('user_id', 'is', null)
 
