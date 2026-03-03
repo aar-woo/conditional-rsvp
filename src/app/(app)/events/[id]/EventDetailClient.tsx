@@ -8,7 +8,7 @@ import { AttendeeList } from '@/components/AttendeeList'
 import { RsvpModal } from '@/components/RsvpModal'
 import { InviteModal } from '@/components/InviteModal'
 import { useEventRsvps } from '@/hooks/useEventRsvps'
-import { CalendarDays, MapPin, UserPlus, Zap } from 'lucide-react'
+import { CalendarDays, Crown, MapPin, UserPlus, Zap } from 'lucide-react'
 import type { Event, Rsvp } from '@/types'
 
 interface EventDetailClientProps {
@@ -31,6 +31,7 @@ export function EventDetailClient({
   const myAttendee = attendees.find(a => a.user_id === currentUserId)
   const myRsvp = myAttendee?.rsvp ?? initialRsvp
   const isGreenlit = myRsvp?.resolved_response === 'yes'
+  const isCancelled = event.status === 'cancelled'
 
   const confirmedCount = attendees.filter(a => a.rsvp?.resolved_response === 'yes').length
 
@@ -74,6 +75,12 @@ export function EventDetailClient({
               {event.location}
             </div>
           )}
+          {isHost && (
+            <div className="flex items-center gap-1.5">
+              <Crown className="h-4 w-4 text-yellow-500" />
+              You are the host
+            </div>
+          )}
         </div>
         {event.description && (
           <p className="text-muted-foreground">{event.description}</p>
@@ -84,10 +91,10 @@ export function EventDetailClient({
 
       {/* Actions */}
       <div className="flex flex-wrap gap-2">
-        <Button onClick={() => setRsvpOpen(true)}>
+        <Button disabled={isCancelled} onClick={() => setRsvpOpen(true)}>
           {myRsvp ? 'Update RSVP' : 'RSVP'}
         </Button>
-        {isHost && (
+        {isHost && !isCancelled && (
           <Button variant="outline" onClick={() => setInviteOpen(true)}>
             <UserPlus className="h-4 w-4 mr-1.5" />
             Invite people
