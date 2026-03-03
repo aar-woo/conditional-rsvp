@@ -12,6 +12,7 @@ interface AttendeeWithRsvp {
 interface AttendeeListProps {
   attendees: AttendeeWithRsvp[]
   currentUserId?: string
+  hostId?: string
 }
 
 function RsvpStatusIcon({ resolved }: { resolved: string }) {
@@ -26,7 +27,7 @@ function getInitials(profile: Profile | null): string {
   return name.slice(0, 2).toUpperCase()
 }
 
-export function AttendeeList({ attendees, currentUserId }: AttendeeListProps) {
+export function AttendeeList({ attendees, currentUserId, hostId }: AttendeeListProps) {
   if (attendees.length === 0) {
     return <p className="text-sm text-muted-foreground">No attendees yet.</p>
   }
@@ -35,6 +36,7 @@ export function AttendeeList({ attendees, currentUserId }: AttendeeListProps) {
     <ul className="space-y-3">
       {attendees.map(({ user_id, profile, rsvp }) => {
         const isGreenlit = rsvp?.resolved_response === 'yes'
+        const isHost = user_id === hostId
         return (
           <li key={user_id} className="flex items-start gap-3">
             <Avatar className="h-8 w-8 shrink-0">
@@ -47,6 +49,11 @@ export function AttendeeList({ attendees, currentUserId }: AttendeeListProps) {
                 </span>
                 {profile?.username && (
                   <span className="text-xs text-muted-foreground">@{profile.username}</span>
+                )}
+                {isHost && (
+                  <Badge variant="outline" className="text-xs py-0 border-muted-foreground/40 text-muted-foreground">
+                    Host
+                  </Badge>
                 )}
                 {isGreenlit && (
                   <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200 text-xs py-0">

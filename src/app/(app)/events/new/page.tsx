@@ -53,6 +53,14 @@ export default function NewEventPage() {
       invite_method: 'username',
     })
 
+    // Default the creator's RSVP to yes
+    await supabase.from('rsvps').insert({
+      event_id: event.id,
+      user_id: user.id,
+      response: 'yes',
+      resolved_response: 'yes',
+    })
+
     router.push(`/events/${event.id}`)
   }
 
