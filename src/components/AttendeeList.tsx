@@ -71,7 +71,7 @@ export function AttendeeList({ attendees, currentUserId }: AttendeeListProps) {
                 </div>
               )}
               {/* Show conditions */}
-              {rsvp?.rsvp_conditions && rsvp.rsvp_conditions.length > 0 && (
+              {rsvp?.response === 'conditional' && rsvp.rsvp_conditions && rsvp.rsvp_conditions.length > 0 && (
                 <ul className="mt-1 space-y-0.5">
                   {rsvp.rsvp_conditions.map(c => (
                     <li key={c.id} className="flex items-center gap-1.5 text-xs text-muted-foreground">
